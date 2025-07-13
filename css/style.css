@@ -80,7 +80,9 @@ body::-webkit-scrollbar {
 .container{
     max-width: 1824px;
     padding: 0 16px;
-    margin: 0 auto;
+    height: max-content;
+    margin: auto;
+    width: 100%;
 }
 button{
     background-color: transparent;
@@ -189,7 +191,6 @@ main.main{
     padding: 7px 8px 7px 12px;
     height: 44px;
     transition: all .2s ease;
-    border-bottom: none;
 }
 .header__lang-selected::after{
     content: '';
@@ -233,6 +234,7 @@ main.main{
     border-radius: 20px 20px 0 0;
     background-color: #fff;
     color: #231F20;
+    border-bottom: none;
 }
 .header__lang.active .header__lang-selected::after{
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cmask id='mask0_4_1853' style='mask-type:alpha' maskUnits='userSpaceOnUse' x='0' y='0' width='24' height='24'%3E%3Crect width='24' height='24' fill='%23D9D9D9'/%3E%3C/mask%3E%3Cg mask='url(%23mask0_4_1853)'%3E%3Cpath d='M12 15.4L6 9.4L7.4 8L12 12.6L16.6 8L18 9.4L12 15.4Z' fill='%23231F20'/%3E%3C/g%3E%3C/svg%3E");
@@ -361,9 +363,9 @@ main.main{
     z-index: 2;
     background: rgba(0, 0, 0, 0.20);
 }
-.hero .container{
+/* .hero .container{
     height: 100%;
-}
+} */
 .hero__inner{
     padding: 60px 0 20px;
     height: 100vh;
@@ -544,18 +546,11 @@ main.main{
     right: -177px;
     z-index: 1;
 }
-.about .container{
-    height: 100%;
-}
 .about__inner{
     max-width: 1486px;
     margin: 0 auto;
     width: 100%;
-    height: 100vh;
-    min-height: max-content;
     padding: 60px 0 20px;
-    overflow-y: auto;
-    overflow-x: hidden;
     display: flex;
     align-items: center;
     gap: 40px;
@@ -592,6 +587,9 @@ main.main{
 @media (max-width: 1279px) {
     .about__inner{
         padding-top: 80px;
+    }
+    .about__title{
+        font-size: 67px;
     }
     .about .section-inner::after{
         content: none;
@@ -638,21 +636,16 @@ main.main{
     left: -214px;
     z-index: 1;
 }
-.ourprod .container{
-    height: 100%;
-}
 .ourprod__inner{
-    width: 100%;
     max-width: 1486px;
     margin: 0 auto;
-    height: 100vh;
-    min-height: max-content;
-    padding: 60px 0 0px;
+    width: 100%;
+    padding: 80px 0 20px;
     display: flex;
-    align-items: center;
-    justify-content: center;
     flex-direction: column;
+    align-items: center;
     gap: 40px;
+    justify-content: space-between;
 }
 .ourprod__top{
     position: relative;
@@ -776,6 +769,9 @@ main.main{
     left: -57px;
 }
 @media (max-width: 1279px) {
+    .ourprod__title{
+        font-size: 67px;
+    }
     .ourprod__block-content{
         flex-direction: column;
     }
@@ -846,8 +842,6 @@ main.main{
     overflow: hidden;
 }
 .products__inner{
-    height: 100vh;
-    min-height: max-content;
     padding: 100px 0 20px;
     display: flex;
     align-items: start;
@@ -971,12 +965,11 @@ main.main{
 
 }
 @media (max-width: 767px) {
-
-}
-@media (max-width: 479px) {
     .products__title{
         font-size: 50px;
     }
+}
+@media (max-width: 479px) {
     .product__item-details{
         top: 16px;
         left: 16px;
@@ -989,17 +982,14 @@ main.main{
 main.main{
     overflow: hidden;
 }
-.main-wrapper {
-    position: relative;
-}
 .hero {
-    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     position: relative;
     z-index: 1;
 }
 .sections-wrapper {
     display: flex;
-    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     position: absolute;
     top: 0;
     left: 100%;
@@ -1010,9 +1000,8 @@ main.main{
 }
 .section-horizontal {
     flex: 0 0 100vw;
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: calc(var(--vh, 1vh) * 100);
+    overflow: hidden;
     scroll-snap-align: start;
 }
 .section__inner{
@@ -1040,6 +1029,15 @@ main.main{
     background-color: #F0E1E4;
 }
 .section-inner{
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.section-inner::-webkit-scrollbar {
+  display: none;
 }

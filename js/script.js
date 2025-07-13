@@ -10,9 +10,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     spaceBetween: 25,
                     slidesPerView: 1.5,
                 },
-                680: {
+                768: {
                     spaceBetween: 25,
-                    slidesPerView: 2,
+                    slidesPerView: 2.5,
                 },
                 1000: {
                     spaceBetween: 25,
@@ -91,7 +91,6 @@ sections.forEach(section => {
         });
     }
 });
-
 function moveUnderlineTo(el) {
     const rect = el.getBoundingClientRect();
     const parentRect = el.parentElement.parentElement.getBoundingClientRect();
@@ -102,7 +101,6 @@ const initialActive = document.querySelector('.header__menu a.active');
 if (initialActive) moveUnderlineTo(initialActive);
 let currentIndex = 0;
 let isThrottled = false;
-
 function scrollToSection(index) {
     if (index < 0) index = 0;
     if (index >= sections.length) index = sections.length - 1;
@@ -111,6 +109,11 @@ function scrollToSection(index) {
         duration: 2,
         ease: "power2.out",
     });
+    const section = sections[index];
+    const inner = section.querySelector('.section-inner');
+    if (inner) {
+        inner.scrollTo({ top: 0, behavior: 'auto' });
+    }
     currentIndex = index;
     updateHeaderClass(index);
     updateWrapperBgClass(index);
@@ -136,7 +139,6 @@ function scrollToSection(index) {
         targetSection.classList.remove("animated");
         targetSection.classList.add("animated");
     }
-    const section = sections[index];
     if (section.classList.contains("products")) {
         const slides = section.querySelectorAll(".products__slide");
         slides.forEach((slide) => {
@@ -144,7 +146,6 @@ function scrollToSection(index) {
             slide.style.transform = '';
         });
     }
-
 }
 ScrollTrigger.create({
     trigger: ".main-wrapper",
@@ -157,22 +158,52 @@ ScrollTrigger.create({
         scrollToSection(currentIndex);
     }
 });
+let readyToSwitch = false;
+let switchTimeout;
 window.addEventListener("wheel", (event) => {
     if (isThrottled) return;
-    if (event.deltaY > 0) {
-        if (currentIndex < sections.length - 1) {
-            scrollToSection(currentIndex + 1);
-            isThrottled = true;
-            setTimeout(() => (isThrottled = false), 1000);
+    const section = sections[currentIndex];
+    const inner = section.querySelector('.section-inner');
+    const hasVerticalScroll = inner && inner.scrollHeight > inner.clientHeight;
+    console.log(hasVerticalScroll)
+    if (hasVerticalScroll) {
+        const scrollTop = inner.scrollTop;
+        const scrollBottom = scrollTop + inner.clientHeight;
+        const isAtBottom = scrollBottom >= inner.scrollHeight - 1;
+        const isAtTop = scrollTop <= 1;
+        if (event.deltaY > 0) {
+            if (!isAtBottom) {
+                readyToSwitch = false;
+                return;
+            } else if (!readyToSwitch) {
+                readyToSwitch = true;
+                clearTimeout(switchTimeout);
+                switchTimeout = setTimeout(() => readyToSwitch = false, 500); // сброс через 0.5с
+                return;
+            }
         }
-    } else if (event.deltaY < 0) {
-        if (currentIndex > 0) {
-            scrollToSection(currentIndex - 1);
-            isThrottled = true;
-            setTimeout(() => (isThrottled = false), 1000);
+        if (event.deltaY < 0) {
+            if (!isAtTop) {
+                readyToSwitch = false;
+                return;
+            } else if (!readyToSwitch) {
+                readyToSwitch = true;
+                clearTimeout(switchTimeout);
+                switchTimeout = setTimeout(() => readyToSwitch = false, 500);
+                return;
+            }
         }
     }
+    if (event.deltaY > 0 && currentIndex < sections.length - 1) {
+        scrollToSection(currentIndex + 1);
+    } else if (event.deltaY < 0 && currentIndex > 0) {
+        scrollToSection(currentIndex - 1);
+    }
+
+    isThrottled = true;
+    setTimeout(() => (isThrottled = false), 1000);
 });
+
 document.querySelectorAll("ul a[data-index]").forEach((link) => {
     link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -195,6 +226,8 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
+let touchMoveY = 0;
+let isTouchScrolling = false;
 window.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1 && !e.target.closest('.products__slider')) {
         touchStartX = e.touches[0].clientX;
@@ -208,24 +241,78 @@ window.addEventListener('touchend', (e) => {
 
         const diffX = touchEndX - touchStartX;
         const diffY = touchEndY - touchStartY;
-        const threshold = 30;
-
+        const thresholdX = 50;
         if (Math.abs(diffX) > Math.abs(diffY)) {
-            if (Math.abs(diffX) > threshold && !isThrottled) {
-                if (diffX < 0) {
-                    if (currentIndex < sections.length - 1) {
-                        scrollToSection(currentIndex + 1);
-                        isThrottled = true;
-                        setTimeout(() => (isThrottled = false), 1000);
-                    }
-                } else {
-                    if (currentIndex > 0) {
-                        scrollToSection(currentIndex - 1);
-                        isThrottled = true;
-                        setTimeout(() => (isThrottled = false), 1000);
-                    }
+            if (Math.abs(diffX) > thresholdX && !isThrottled) {
+                if (diffX < 0 && currentIndex < sections.length - 1) {
+                    scrollToSection(currentIndex + 1);
+                    isThrottled = true;
+                    setTimeout(() => (isThrottled = false), 1000);
+                } else if (diffX > 0 && currentIndex > 0) {
+                    scrollToSection(currentIndex - 1);
+                    isThrottled = true;
+                    setTimeout(() => (isThrottled = false), 1000);
                 }
             }
         }
     }
+});
+let holdTimer = null;
+let holdStartTime = null;
+window.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 1 || isThrottled) return;
+    const section = sections[currentIndex];
+    const inner = section.querySelector('.section-inner');
+    if (!inner || inner.scrollHeight <= inner.clientHeight) return;
+    const scrollTop = inner.scrollTop;
+    const scrollBottom = scrollTop + inner.clientHeight;
+    const isAtBottom = scrollBottom >= inner.scrollHeight - 1;
+    const isAtTop = scrollTop <= 1;
+    const currentY = e.touches[0].clientY;
+    const diffY = touchStartY - currentY;
+    const threshold = 30;
+    if (Math.abs(diffY) < threshold) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        holdStartTime = null;
+        return;
+    }
+    if (diffY > 0 && isAtBottom) {
+        if (!holdStartTime) {
+            holdStartTime = Date.now();
+            holdTimer = setTimeout(() => {
+                scrollToSection(currentIndex + 1);
+                holdStartTime = null;
+                isThrottled = true;
+                setTimeout(() => isThrottled = false, 1000);
+            }, 10);
+        }
+    } else if (diffY < 0 && isAtTop) {
+        if (!holdStartTime) {
+            holdStartTime = Date.now();
+            holdTimer = setTimeout(() => {
+                scrollToSection(currentIndex - 1);
+                holdStartTime = null;
+                isThrottled = true;
+                setTimeout(() => isThrottled = false, 1000);
+            }, 100);
+        }
+    } else {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        holdStartTime = null;
+    }
+});
+window.addEventListener('touchend', () => {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    holdStartTime = null;
+});
+resizeHeight()
+function resizeHeight(){
+  let vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+window.addEventListener('resize', () => {
+  resizeHeight()
 });
