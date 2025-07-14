@@ -3,26 +3,8 @@ document.addEventListener("DOMContentLoaded", function() {
         new Swiper(slider, {
             loop: false,
             spaceBetween: 20,
-            slidesPerView: 1.2,
+            slidesPerView: "auto",
             allowTouchMove: true,
-            breakpoints: {
-                480: {
-                    spaceBetween: 25,
-                    slidesPerView: 1.5,
-                },
-                768: {
-                    spaceBetween: 25,
-                    slidesPerView: 2.5,
-                },
-                1000: {
-                    spaceBetween: 25,
-                    slidesPerView: 3,
-                },
-                1280: {
-                    spaceBetween: 32,
-                    slidesPerView: 4,
-                },
-            },
         });
     });
 });
@@ -97,112 +79,90 @@ function moveUnderlineTo(el) {
     underline.style.width = `${rect.width}px`;
     underline.style.left = `${rect.left - parentRect.left}px`;
 }
+
+
+
+
 const initialActive = document.querySelector('.header__menu a.active');
 if (initialActive) moveUnderlineTo(initialActive);
+
+
 let currentIndex = 0;
 let isThrottled = false;
+
 function scrollToSection(index) {
     if (index < 0) index = 0;
     if (index >= sections.length) index = sections.length - 1;
+    currentScrollX = sectionWidth * index;
     gsap.to(sectionsWrapper, {
-        x: -window.innerWidth * index,
-        duration: 2,
+        x: -currentScrollX,
+        duration: 1.2,
         ease: "power2.out",
     });
+    currentIndex = index;
     const section = sections[index];
     const inner = section.querySelector('.section-inner');
     if (inner) {
         inner.scrollTo({ top: 0, behavior: 'auto' });
     }
-    currentIndex = index;
     updateHeaderClass(index);
     updateWrapperBgClass(index);
-    menuLinks.forEach(link => {
-        link.classList.remove("active");
-        if (link.parentElement) {
-            link.parentElement.classList.remove("active");
-        }
+    updateActiveMenuLink(index);
+}
+
+
+let currentScrollX = 0;
+const sectionWidth = window.innerWidth;
+const maxScrollX = sectionWidth * (sections.length - 1);
+
+window.addEventListener("wheel", (event) => {
+    event.preventDefault();
+
+    const delta = event.deltaY * 1.5;
+    currentScrollX += delta;
+
+    if (currentScrollX < 0) currentScrollX = 0;
+    if (currentScrollX > maxScrollX) currentScrollX = maxScrollX;
+
+    gsap.to(sectionsWrapper, {
+        x: -currentScrollX,
+        duration: 0.5,
+        ease: "power2.out",
     });
-    if (index <= 3) {
+
+    
+    const index = Math.round(currentScrollX / sectionWidth);
+    if (index !== currentIndex) {
+        currentIndex = index;
+        updateHeaderClass(index);
+        updateWrapperBgClass(index);
+
+        const section = sections[index];
+        menuLinks.forEach(link => {
+            link.classList.remove("active");
+            if (link.parentElement) link.parentElement.classList.remove("active");
+        });
         const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
         if (activeLink) {
             activeLink.classList.add("active");
-            if (activeLink.parentElement) {
-                activeLink.parentElement.classList.add("active");
-            }
-            document.querySelector('.header__menu').classList.remove("active");
+            if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
             moveUnderlineTo(activeLink);
         }
-    }
-    if (index === 2) {
-        const targetSection = sections[index];
-        targetSection.classList.remove("animated");
-        targetSection.classList.add("animated");
-    }
-    if (section.classList.contains("products")) {
-        const slides = section.querySelectorAll(".products__slide");
-        slides.forEach((slide) => {
-            slide.classList.add("animated");
-            slide.style.transform = '';
-        });
-    }
-}
-ScrollTrigger.create({
-    trigger: ".main-wrapper",
-    start: "top top",
-    end: () => "+=" + window.innerWidth * (sections.length - 1),
-    pin: true,
-    scrub: true,
-    invalidateOnRefresh: true,
-    onRefresh: () => {
-        scrollToSection(currentIndex);
-    }
-});
-let readyToSwitch = false;
-let switchTimeout;
-window.addEventListener("wheel", (event) => {
-    if (isThrottled) return;
-    const section = sections[currentIndex];
-    const inner = section.querySelector('.section-inner');
-    const hasVerticalScroll = inner && inner.scrollHeight > inner.clientHeight;
-    console.log(hasVerticalScroll)
-    if (hasVerticalScroll) {
-        const scrollTop = inner.scrollTop;
-        const scrollBottom = scrollTop + inner.clientHeight;
-        const isAtBottom = scrollBottom >= inner.scrollHeight - 1;
-        const isAtTop = scrollTop <= 1;
-        if (event.deltaY > 0) {
-            if (!isAtBottom) {
-                readyToSwitch = false;
-                return;
-            } else if (!readyToSwitch) {
-                readyToSwitch = true;
-                clearTimeout(switchTimeout);
-                switchTimeout = setTimeout(() => readyToSwitch = false, 500); // сброс через 0.5с
-                return;
-            }
-        }
-        if (event.deltaY < 0) {
-            if (!isAtTop) {
-                readyToSwitch = false;
-                return;
-            } else if (!readyToSwitch) {
-                readyToSwitch = true;
-                clearTimeout(switchTimeout);
-                switchTimeout = setTimeout(() => readyToSwitch = false, 500);
-                return;
-            }
+        if (index === 2) {
+            const targetSection = sections[index];
+            targetSection.classList.remove("animated");
+            targetSection.classList.add("animated");
+        }        
+        if (section.classList.contains("products")) {
+            const slides = section.querySelectorAll(".products__slide");
+            slides.forEach((slide) => {
+                slide.classList.add("animated");
+                slide.style.transform = '';
+            });
         }
     }
-    if (event.deltaY > 0 && currentIndex < sections.length - 1) {
-        scrollToSection(currentIndex + 1);
-    } else if (event.deltaY < 0 && currentIndex > 0) {
-        scrollToSection(currentIndex - 1);
-    }
+}, { passive: false });
 
-    isThrottled = true;
-    setTimeout(() => (isThrottled = false), 1000);
-});
 
 document.querySelectorAll("ul a[data-index]").forEach((link) => {
     link.addEventListener("click", (e) => {
@@ -222,92 +182,70 @@ function updateWrapperBgClass(index) {
     sectionsWrapper.classList.add(`sections-bg-${index}`);
 }
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-let touchMoveY = 0;
-let isTouchScrolling = false;
-window.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1 && !e.target.closest('.products__slider')) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-    }
-});
-window.addEventListener('touchend', (e) => {
-    if (e.changedTouches.length === 1 && !e.target.closest('.products__slider')) {
-        touchEndX = e.changedTouches[0].clientX;
-        touchEndY = e.changedTouches[0].clientY;
+let lastTouchY = null;
 
-        const diffX = touchEndX - touchStartX;
-        const diffY = touchEndY - touchStartY;
-        const thresholdX = 50;
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-            if (Math.abs(diffX) > thresholdX && !isThrottled) {
-                if (diffX < 0 && currentIndex < sections.length - 1) {
-                    scrollToSection(currentIndex + 1);
-                    isThrottled = true;
-                    setTimeout(() => (isThrottled = false), 1000);
-                } else if (diffX > 0 && currentIndex > 0) {
-                    scrollToSection(currentIndex - 1);
-                    isThrottled = true;
-                    setTimeout(() => (isThrottled = false), 1000);
-                }
-            }
-        }
-    }
-});
-let holdTimer = null;
-let holdStartTime = null;
 window.addEventListener('touchmove', (e) => {
-    if (e.touches.length !== 1 || isThrottled) return;
-    const section = sections[currentIndex];
-    const inner = section.querySelector('.section-inner');
-    if (!inner || inner.scrollHeight <= inner.clientHeight) return;
-    const scrollTop = inner.scrollTop;
-    const scrollBottom = scrollTop + inner.clientHeight;
-    const isAtBottom = scrollBottom >= inner.scrollHeight - 1;
-    const isAtTop = scrollTop <= 1;
-    const currentY = e.touches[0].clientY;
-    const diffY = touchStartY - currentY;
-    const threshold = 30;
-    if (Math.abs(diffY) < threshold) {
-        clearTimeout(holdTimer);
-        holdTimer = null;
-        holdStartTime = null;
+    if (e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    if (lastTouchY === null) {
+        lastTouchY = touch.clientY;
         return;
     }
-    if (diffY > 0 && isAtBottom) {
-        if (!holdStartTime) {
-            holdStartTime = Date.now();
-            holdTimer = setTimeout(() => {
-                scrollToSection(currentIndex + 1);
-                holdStartTime = null;
-                isThrottled = true;
-                setTimeout(() => isThrottled = false, 1000);
-            }, 10);
-        }
-    } else if (diffY < 0 && isAtTop) {
-        if (!holdStartTime) {
-            holdStartTime = Date.now();
-            holdTimer = setTimeout(() => {
-                scrollToSection(currentIndex - 1);
-                holdStartTime = null;
-                isThrottled = true;
-                setTimeout(() => isThrottled = false, 1000);
-            }, 100);
-        }
-    } else {
-        clearTimeout(holdTimer);
-        holdTimer = null;
-        holdStartTime = null;
+
+    const deltaY = lastTouchY - touch.clientY;
+    lastTouchY = touch.clientY;
+    currentScrollX += deltaY;
+    if (currentScrollX < 0) currentScrollX = 0;
+    if (currentScrollX > maxScrollX) currentScrollX = maxScrollX;
+
+    gsap.to(sectionsWrapper, {
+        x: -currentScrollX,
+        duration: 0.4,
+        ease: "power2.out",
+    });
+    const index = Math.round(currentScrollX / sectionWidth);
+    if (index !== currentIndex) {
+        currentIndex = index;
+        updateHeaderClass(index);
+        updateWrapperBgClass(index);
+        updateActiveMenuLink(index);
     }
-});
+}, { passive: false });
+
 window.addEventListener('touchend', () => {
-    clearTimeout(holdTimer);
-    holdTimer = null;
-    holdStartTime = null;
+    lastTouchY = null;
 });
+
+function updateActiveMenuLink(index) {
+    menuLinks.forEach(link => {
+        link.classList.remove("active");
+        if (link.parentElement) link.parentElement.classList.remove("active");
+    });
+    const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
+    if (activeLink) {
+        activeLink.classList.add("active");
+        if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
+        moveUnderlineTo(activeLink);
+    }
+
+    if (index === 2) {
+        const targetSection = sections[index];
+        targetSection.classList.remove("animated");
+        targetSection.classList.add("animated");
+    }
+
+    const section = sections[index];
+    if (section.classList.contains("products")) {
+        const slides = section.querySelectorAll(".products__slide");
+        slides.forEach((slide) => {
+            slide.classList.add("animated");
+            slide.style.transform = '';
+        });
+    }
+}
+
+
 resizeHeight()
 function resizeHeight(){
   let vh = window.innerHeight * 0.01;
