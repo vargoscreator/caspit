@@ -344,7 +344,7 @@ main.main{
 }
 .hero__inner{
     padding: 5.56vh 0 1.85vh;
-    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     min-height: max-content;
     display: flex;
     align-items: center;
@@ -467,7 +467,7 @@ main.main{
 .about{
     z-index: 10;
     position: relative;
-
+    min-width: 600px;
 }
 .about .section-inner{
     position: relative;
@@ -527,7 +527,9 @@ main.main{
 
 }
 @media (max-width: 999px) {
-
+    .about .section-inner::after{
+        bottom: -13vh;
+    }
 }
 @media (max-width: 767px) {
     
@@ -540,6 +542,7 @@ main.main{
     z-index: 15;
     overflow: hidden;
     position: relative;
+    min-width: 750px;
 }
 .ourprod .section-inner{
     position: relative;
@@ -661,6 +664,11 @@ main.main{
 .ourprod__block-icon{
     display: flex;
     align-items: center;
+    width: 100%;
+    max-width: 10.19vh;
+}
+.ourprod__block-icon img{
+    width: 10.19vh;
 }
 .ourprod__block-descr{
     font-size: 1.3vh;
@@ -693,7 +701,9 @@ main.main{
 
 }
 @media (max-width: 999px) {
-
+    .ourprod .section-inner::before{
+        bottom: -13vh;
+    }
 }
 @media (max-width: 767px) {
 
@@ -835,11 +845,11 @@ main.main{
 }
 main.main{
     overflow: hidden;
-    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     width: 100vw;
 }
 .hero {
-    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     position: relative;
     z-index: 1;
 }
@@ -858,9 +868,10 @@ main.main{
     transition: background-color .5s ease;
 }
 .section-horizontal {
-    flex: 0 0 100vw;
-    height: 100vh;
-    scroll-snap-align: start;
+    width: 100vw;
+    height: calc(var(--vh, 1vh) * 100);
+    overflow: hidden;
+    flex-shrink: 0;
 }
 .section__inner{
     height: 100%;

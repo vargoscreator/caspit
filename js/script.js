@@ -54,10 +54,8 @@ heroBtn.addEventListener('click', (e) => {
 });
 function updateHeaderClass(index) {
     const section = sections[index];
-    header.classList.remove("scrolled", );
-    if (section.classList.contains("section-main")) {} else {
-        header.classList.add("scrolled");
-    }
+    header.classList.remove("scrolled");
+    if(index !== 0) header.classList.add("scrolled");
 }
 gsap.registerPlugin(ScrollTrigger);
 const sections = gsap.utils.toArray(".section-horizontal");
@@ -89,40 +87,55 @@ if (initialActive) moveUnderlineTo(initialActive);
 
 let currentIndex = 0;
 let isThrottled = false;
+let currentScrollX = 0;
+const sectionWidth = window.innerWidth;
+const maxScrollX = sectionWidth * (sections.length - 1);
+const sectionWidths = sections.map(section => section.offsetWidth);
+const totalWidth = sectionWidths.reduce((sum, width) => sum + width, 0);
+
+
 
 function scrollToSection(index) {
     if (index < 0) index = 0;
     if (index >= sections.length) index = sections.length - 1;
-    currentScrollX = sectionWidth * index;
+
+    let scrollX = 0;
+    for (let i = 0; i < index; i++) {
+        scrollX += sectionWidths[i];
+    }
+
     gsap.to(sectionsWrapper, {
-        x: -currentScrollX,
+        x: -scrollX,
         duration: 1.2,
         ease: "power2.out",
     });
+
+    currentScrollX = scrollX;
     currentIndex = index;
+
     const section = sections[index];
     const inner = section.querySelector('.section-inner');
-    if (inner) {
-        inner.scrollTo({ top: 0, behavior: 'auto' });
-    }
+    if (inner) inner.scrollTo({ top: 0, behavior: 'auto' });
+
     updateHeaderClass(index);
     updateWrapperBgClass(index);
     updateActiveMenuLink(index);
 }
 
+function getCurrentIndex(scrollX) {
+    let accumulated = 0;
+    for (let i = 0; i < sectionWidths.length; i++) {
+        accumulated += sectionWidths[i];
+        if (scrollX < accumulated - sectionWidths[i] / 2) return i;
+    }
+    return sectionWidths.length - 1;
+}
 
-let currentScrollX = 0;
-const sectionWidth = window.innerWidth;
-const maxScrollX = sectionWidth * (sections.length - 1);
 
 window.addEventListener("wheel", (event) => {
     event.preventDefault();
-
     const delta = event.deltaY * 1.5;
-    currentScrollX += delta;
-
-    if (currentScrollX < 0) currentScrollX = 0;
-    if (currentScrollX > maxScrollX) currentScrollX = maxScrollX;
+    currentScrollX = Math.max(0, Math.min(currentScrollX + delta, totalWidth - window.innerWidth));
 
     gsap.to(sectionsWrapper, {
         x: -currentScrollX,
@@ -130,14 +143,14 @@ window.addEventListener("wheel", (event) => {
         ease: "power2.out",
     });
 
-    
-    const index = Math.round(currentScrollX / sectionWidth);
+    const index = getCurrentIndex(currentScrollX);
     if (index !== currentIndex) {
         currentIndex = index;
         updateHeaderClass(index);
         updateWrapperBgClass(index);
+        updateActiveMenuLink(index);
 
-        const section = sections[index];
+        const section = sections[index - 1];
         menuLinks.forEach(link => {
             link.classList.remove("active");
             if (link.parentElement) link.parentElement.classList.remove("active");
@@ -149,10 +162,10 @@ window.addEventListener("wheel", (event) => {
             moveUnderlineTo(activeLink);
         }
         if (index === 2) {
-            const targetSection = sections[index];
+            const targetSection = section;
             targetSection.classList.remove("animated");
             targetSection.classList.add("animated");
-        }        
+        }  
         if (section.classList.contains("products")) {
             const slides = section.querySelectorAll(".products__slide");
             slides.forEach((slide) => {
@@ -182,29 +195,35 @@ function updateWrapperBgClass(index) {
     sectionsWrapper.classList.add(`sections-bg-${index}`);
 }
 
+let lastTouchX = null;
 let lastTouchY = null;
 
 window.addEventListener('touchmove', (e) => {
     if (e.touches.length !== 1) return;
-
     const touch = e.touches[0];
-    if (lastTouchY === null) {
+    if (lastTouchY === null || lastTouchX === null) {
         lastTouchY = touch.clientY;
+        lastTouchX = touch.clientX;
         return;
     }
-
     const deltaY = lastTouchY - touch.clientY;
+    const deltaX = lastTouchX - touch.clientX;
     lastTouchY = touch.clientY;
-    currentScrollX += deltaY;
+    lastTouchX = touch.clientX;
+    const combinedDelta = deltaY + deltaX;
+    currentScrollX += combinedDelta;
     if (currentScrollX < 0) currentScrollX = 0;
-    if (currentScrollX > maxScrollX) currentScrollX = maxScrollX;
+    if (currentScrollX > totalWidth - window.innerWidth) {
+        currentScrollX = totalWidth - window.innerWidth;
+    }
 
     gsap.to(sectionsWrapper, {
         x: -currentScrollX,
         duration: 0.4,
         ease: "power2.out",
     });
-    const index = Math.round(currentScrollX / sectionWidth);
+
+    const index = getCurrentIndex(currentScrollX);
     if (index !== currentIndex) {
         currentIndex = index;
         updateHeaderClass(index);
@@ -215,27 +234,27 @@ window.addEventListener('touchmove', (e) => {
 
 window.addEventListener('touchend', () => {
     lastTouchY = null;
+    lastTouchX = null;
 });
+
 
 function updateActiveMenuLink(index) {
     menuLinks.forEach(link => {
         link.classList.remove("active");
         if (link.parentElement) link.parentElement.classList.remove("active");
     });
+    const section = sections[index - 1];
     const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
     if (activeLink) {
         activeLink.classList.add("active");
         if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
         moveUnderlineTo(activeLink);
     }
-
     if (index === 2) {
-        const targetSection = sections[index];
+        const targetSection = section;
         targetSection.classList.remove("animated");
         targetSection.classList.add("animated");
     }
-
-    const section = sections[index];
     if (section.classList.contains("products")) {
         const slides = section.querySelectorAll(".products__slide");
         slides.forEach((slide) => {
