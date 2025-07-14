@@ -7,12 +7,6 @@ document.addEventListener("DOMContentLoaded", function() {
             allowTouchMove: true,
         });
     });
-});
-document.addEventListener("DOMContentLoaded", () => {
-    const textSpan = document.querySelector(".hero__btn-text");
-    const textPath = textSpan.querySelector("textPath");
-    const content = textSpan.getAttribute("data-text");
-    textPath.textContent = content;
 
     const langBlock = document.querySelector(".header__lang");
     const langButton = langBlock.querySelector(".header__lang-selected");
