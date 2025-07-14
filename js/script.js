@@ -1,10 +1,29 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('.products__slider').forEach((slider, index) => {
-        new Swiper(slider, {
+        let swiper = new Swiper(slider, {
             loop: false,
             spaceBetween: 20,
             slidesPerView: "auto",
             allowTouchMove: true,
+            mousewheel: {
+                releaseOnEdges: true,
+            },
+            on: {
+                reachBeginning: function () {
+                    slider.classList.add('at-start');
+                },
+                reachEnd: function () {
+                    slider.classList.add('at-end');
+                },
+                fromEdge: function () {
+                    slider.classList.remove('at-start');
+                    slider.classList.remove('at-end');
+                },
+                slideChange: function () {
+                    slider.classList.toggle('at-start', this.isBeginning);
+                    slider.classList.toggle('at-end', this.isEnd);
+                }
+            }
         });
     });
 
@@ -49,7 +68,7 @@ heroBtn.addEventListener('click', (e) => {
 function updateHeaderClass(index) {
     const section = sections[index];
     header.classList.remove("scrolled");
-    if(index !== 0) header.classList.add("scrolled");
+    if (index !== 0) header.classList.add("scrolled");
 }
 gsap.registerPlugin(ScrollTrigger);
 const sections = gsap.utils.toArray(".section-horizontal");
@@ -107,6 +126,9 @@ function scrollToSection(index) {
     currentScrollX = scrollX;
     currentIndex = index;
 
+    const section = sections[index];
+    const inner = section.querySelector('.section-inner');
+    if (inner) inner.scrollTo({ top: 0, behavior: 'auto' });
 
     updateHeaderClass(index);
     updateWrapperBgClass(index);
@@ -124,6 +146,10 @@ function getCurrentIndex(scrollX) {
 
 
 window.addEventListener("wheel", (event) => {
+    if ((event.target.closest('.products__slider') && !event.target.closest('.products__slider').classList.contains('at-start')) && !event.target.closest('.products__slider').classList.contains('at-end')) {
+        return
+    }
+
     event.preventDefault();
     const delta = event.deltaY * 1.5;
     currentScrollX = Math.max(0, Math.min(currentScrollX + delta, totalWidth - window.innerWidth));
@@ -149,7 +175,6 @@ window.addEventListener("wheel", (event) => {
         const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
         if (activeLink) {
             activeLink.classList.add("active");
-            document.querySelector('.header__menu').classList.remove('active');
             if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
             moveUnderlineTo(activeLink);
         }
@@ -157,7 +182,7 @@ window.addEventListener("wheel", (event) => {
             const targetSection = section;
             targetSection.classList.remove("animated");
             targetSection.classList.add("animated");
-        }  
+        }
         if (section.classList.contains("products")) {
             const slides = section.querySelectorAll(".products__slide");
             slides.forEach((slide) => {
@@ -191,6 +216,10 @@ let lastTouchX = null;
 let lastTouchY = null;
 
 window.addEventListener('touchmove', (e) => {
+    if ((e.target.closest('.products__slider') && !e.target.closest('.products__slider').classList.contains('at-start')) && !e.target.closest('.products__slider').classList.contains('at-end')) {
+        return
+    }
+
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
     if (lastTouchY === null || lastTouchX === null) {
@@ -239,7 +268,6 @@ function updateActiveMenuLink(index) {
     const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
     if (activeLink) {
         activeLink.classList.add("active");
-        document.querySelector('.header__menu').classList.remove('active');
         if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
         moveUnderlineTo(activeLink);
     }
@@ -259,10 +287,10 @@ function updateActiveMenuLink(index) {
 
 
 resizeHeight()
-function resizeHeight(){
-  let vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+function resizeHeight() {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
 }
 window.addEventListener('resize', () => {
-  resizeHeight()
+    resizeHeight()
 });
