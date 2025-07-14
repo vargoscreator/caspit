@@ -731,10 +731,23 @@ main.main{
 .products__slider{
     margin-top: 4.44vh;
     width: 100%;
+    display: flex;
+    gap: 1.85vh;
+    position: relative;
+    user-select: none;
+    cursor: grab;
+}
+.products__slider.dragging {
+  cursor: grabbing;
 }
 .products__slide {
     transition: transform 2s ease;
     width: 37.78vh;
+    min-width: 37.78vh;
+    pointer-events: none;
+}
+.products__slide:not(:last-child){
+    margin-right: 1.85vh;
 }
 .products__slide.animated {
     transform: translateX(0);
@@ -810,6 +823,7 @@ main.main{
     height: 5.28vh;
     max-width: 17.5vh;
     width: 100%;
+    pointer-events: all;
 }
 .product__item-more::after{
     content: '';
@@ -839,6 +853,7 @@ main.main{
     }
     .product__item{
         width: 29.7vh;
+        min-width: 29.7vh;
     }
 }
 main.main{
