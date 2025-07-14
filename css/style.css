@@ -694,9 +694,6 @@ main.main{
 
 }
 @media (max-width: 479px) {
-    .ourprod{
-        min-width: 670px;
-    }
     .ourprod__content{
         margin-top: 0;
     }

@@ -107,9 +107,6 @@ function scrollToSection(index) {
     currentScrollX = scrollX;
     currentIndex = index;
 
-    const section = sections[index];
-    const inner = section.querySelector('.section-inner');
-    if (inner) inner.scrollTo({ top: 0, behavior: 'auto' });
 
     updateHeaderClass(index);
     updateWrapperBgClass(index);
@@ -152,6 +149,7 @@ window.addEventListener("wheel", (event) => {
         const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
         if (activeLink) {
             activeLink.classList.add("active");
+            document.querySelector('.header__menu').classList.remove('active');
             if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
             moveUnderlineTo(activeLink);
         }
@@ -241,6 +239,7 @@ function updateActiveMenuLink(index) {
     const activeLink = document.querySelector(`.header__menu a[data-index="${index}"]`);
     if (activeLink) {
         activeLink.classList.add("active");
+        document.querySelector('.header__menu').classList.remove('active');
         if (activeLink.parentElement) activeLink.parentElement.classList.add("active");
         moveUnderlineTo(activeLink);
     }
