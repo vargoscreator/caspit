@@ -740,11 +740,15 @@ main.main{
 .products__slider.dragging {
   cursor: grabbing;
 }
+.products__slider .swiper-wrapper{
+    align-items: stretch;
+}
 .products__slide {
     transition: transform 2s ease;
     width: 37.78vh;
     min-width: 37.78vh;
     pointer-events: none;
+    height: auto;
 }
 .products__slide:not(:last-child){
     margin-right: 1.85vh;
@@ -756,7 +760,8 @@ main.main{
     border-radius: 1.85vh;
     background: #FFF;
     padding: 1.11vh;
-    height: max-content;
+    display: flex;
+    flex-direction: column;
 }
 .product__item-details{
     position: absolute;
@@ -791,6 +796,9 @@ main.main{
 .product__item-content{
     margin-top: 1.11vh;
     padding: 0.74vh;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 .product__item-title{
     font-size: 2.22vh;
@@ -810,6 +818,7 @@ main.main{
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     max-width: 100%;
+    margin-bottom: 1.85vh;
 }
 .product__item-more{
     transition: all .2s ease;
@@ -819,7 +828,7 @@ main.main{
     display: flex;
     align-items: center;
     gap: 0.93vh;
-    margin-top: 1.85vh;
+    margin-top: auto;
     height: 5.28vh;
     max-width: 17.5vh;
     width: 100%;
@@ -913,4 +922,8 @@ main.main{
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+.products__slider {
+    touch-action: pan-y; 
 }
